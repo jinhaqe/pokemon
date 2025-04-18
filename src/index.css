@@ -1,3 +1,15 @@
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
+
+@font-face {
+   font-family: "DOSGothic";
+   src: url("https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_eight@1.0/DOSGothic.woff")
+      format("woff");
+   font-weight: normal;
+   font-style: normal;
+}
+
+* {
+   font-family: "DOSGothic";
+}

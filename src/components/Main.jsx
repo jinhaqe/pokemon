@@ -16,10 +16,13 @@ export default function Main() {
             <input
                type="text"
                placeholder="포켓몬 이름 또는 번호를 입력하세요"
-               className="w-full max-w-lg px-5 py-3 mt-10 rounded-lg border bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+               className="w-full mr-3 max-w-lg px-5 py-3 mb-10 rounded-4xl border bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600"
             />
+            <button className="h-13 p-3 rounded-4xl border bg-white border-gray-300 text-sm hover:bg-black hover:text-white transition-transform transform hover:-translate-y-0.5 dark:bg-gray-700 dark:text-white">
+               검색
+            </button>
          </div>
-         <div className="flex flex-wrap justify-center gap-5 px-50 py-5">
+         <div className="w-[75%] mx-auto flex flex-wrap justify-center gap-5 py-5">
             {loading ? (
                <div className="w-full flex flex-col justify-center items-center py-10 space-y-4">
                   <img src={Img} className="animate-spin-slow" />

@@ -7,14 +7,14 @@ export default function PokemonCard({ pokemon }) {
    console.log("Available type keys:", Object.keys(typeKoMap));
 
    return (
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all w-[200px] h-[280px] flex flex-col items-center cursor-pointer">
+      <div className="bg-white dark:bg-gray-800 rounded-xl p-5 shadow-md hover:shadow-lg transform hover:-translate-y-1 transition-all w-[220px] h-[280px] flex flex-col items-center cursor-pointer">
          <img
             src={pokemon.gif}
             alt={pokemon.name}
             className="w-[80px] h-[150px] object-contain mb-2"
          />
          <h3 className="text-lg font-semibold mb-3 text-center">
-            No{pokemon.id}. {pokemon.name}
+            No.{pokemon.id} {pokemon.name}
          </h3>
 
          <div className="flex gap-2 justify-center flex-wrap">
@@ -23,7 +23,7 @@ export default function PokemonCard({ pokemon }) {
                const typeInfo = typeKoMap[typeName.toLowerCase()];
 
                if (!typeInfo) {
-                  console.warn(`Type not found in typeKoMap: ${typeName}`);
+                  console.log(`찾을 수 없음 typeKoMap: ${typeName}`);
                   return null;
                }
 

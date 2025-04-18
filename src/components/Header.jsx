@@ -12,7 +12,7 @@ export default function Header() {
 
    return (
       <header className="fixed top-0 left-0 w-full h-20 shadow-md z-10 bg-white dark:bg-gray-800">
-         <div className="max-w-[calc(100%-600px)] mx-auto h-full flex items-center justify-between px-10">
+         <div className=" mx-auto h-full flex items-center justify-between px-10">
             <img
                src={Img}
                alt="포켓몬 도감 로고"
