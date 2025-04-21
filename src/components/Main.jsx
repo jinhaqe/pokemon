@@ -1,17 +1,22 @@
-import { useEffect, useRef, useContext } from "react";
+import { useEffect, useRef, useContext, useState } from "react";
 import PokemonCard from "./PorkemonCard";
-import { PokemonContext } from "../Context/PokemonContext";
-import Img from "../assets/에몽가.gif";
 import Bg from "../assets/Bg.jpg";
 import Bg2 from "../assets/Bg2.jpg";
 import { useTheme } from "../Context/ThemeContext";
 import { useModal } from "../Context/ModalContext";
+import { useLanguage } from "../Context/LanguageContext";
+import { PokemonContext } from "../Context/PokemonContext";
+import noResult from "../assets/로딩.gif";
 
 export default function Main() {
-   const { pokemonList, loading, fetchMorePokemon, more } =
+   const { pokemonList, searchLoading, fetchMorePokemon, more } =
       useContext(PokemonContext);
+   const { searchPokemon, searchQuery } = useContext(PokemonContext);
+   const { language } = useLanguage();
    const { openModal } = useModal();
    const { isDark } = useTheme();
+
+   const [query, setQuery] = useState(searchQuery);
 
    const observerRef = useRef();
 
@@ -32,6 +37,16 @@ export default function Main() {
       };
    }, [more, fetchMorePokemon]);
 
+   const handleSearch = () => {
+      searchPokemon(query);
+   };
+
+   const handleKeyPress = (e) => {
+      if (e.key === "Enter") {
+         handleSearch();
+      }
+   };
+
    return (
       <main className="pt-20 mx-auto w-full">
          <div
@@ -40,38 +55,46 @@ export default function Main() {
          >
             <input
                type="text"
-               placeholder="포켓몬 이름 또는 번호를 입력하세요"
+               value={query}
+               onChange={(e) => setQuery(e.target.value)} // 입력값이 변경되면 로컬 상태에 저장
+               onKeyPress={handleKeyPress} // 엔터 키를 눌렀을 때 검색 실행
+               placeholder={
+                  language === "ko"
+                     ? "포켓몬 이름 또는 번호 검색..."
+                     : "Search by name or number..."
+               }
                className="w-full mr-3 max-w-lg px-5 py-3 mb-10 rounded-4xl border bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:focus:ring-gray-400"
             />
-            <button className="h-13 p-3 rounded-4xl border bg-white border-gray-300 text-sm hover:bg-black hover:text-white transition-transform transform hover:-translate-y-0.5 dark:bg-gray-700 dark:text-white dark:border-gray-600">
+            <button
+               onClick={handleSearch} // 버튼 클릭 시 검색
+               className="h-13 p-3 rounded-4xl border bg-white border-gray-300 text-sm hover:bg-black hover:text-white transition-transform transform hover:-translate-y-0.5 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+            >
                ꔫ
             </button>
          </div>
 
          {/* 포켓몬 카드 리스트 */}
          <div className="w-[75%] mx-auto flex flex-wrap justify-center gap-5 py-5">
-            {pokemonList.map((pokemon) => (
-               <PokemonCard
-                  key={pokemon.id}
-                  pokemon={pokemon}
-                  onClick={() => openModal(pokemon)}
-               />
-            ))}
+            {pokemonList.length === 0 && !searchLoading ? ( // searchLoading이 false일 때만 결과 없음 표시
+               <div className="flex-col">
+                  <p className="text-xl text-center mb-4 text-gray-500">
+                     {language === "ko"
+                        ? "결과가 없습니다"
+                        : "No results found"}
+                  </p>
+                  <img src={noResult} />
+               </div>
+            ) : (
+               pokemonList.map((pokemon) => (
+                  <PokemonCard
+                     key={pokemon.id}
+                     pokemon={pokemon}
+                     onClick={() => openModal(pokemon)}
+                  />
+               ))
+            )}
          </div>
 
-         {/* 로딩 인디케이터와 관찰자를 분리 */}
-         {loading && (
-            <div className="w-full flex justify-center pb-10">
-               <div className="flex flex-col items-center space-y-4">
-                  <img src={Img} className="animate-spin-slow" alt="로딩 중" />
-                  <p className="text-xl font-bold text-gray-600 animate-pulse">
-                     포켓몬 불러오는 중...
-                  </p>
-               </div>
-            </div>
-         )}
-
-         {/* 관찰자 요소는 항상 존재하지만 보이지 않음 */}
          <div className="w-full flex justify-center">
             <div ref={observerRef} className="h-10 w-full"></div>
          </div>
