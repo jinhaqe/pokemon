@@ -158,7 +158,7 @@ export default function Modal() {
             <div className="text-center mt-7">
                <button
                   onClick={closeModal}
-                  className="mt-10 px-6 py-2 bg-gray-100 text-black rounded hover:bg-gray-200"
+                  className="mt-10 px-6 py-2 bg-gray-100 text-black rounded hover:bg-gray-200 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
                >
                   {text.close}
                </button>

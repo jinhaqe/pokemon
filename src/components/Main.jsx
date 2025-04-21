@@ -67,7 +67,7 @@ export default function Main() {
             />
             <button
                onClick={handleSearch} // 버튼 클릭 시 검색
-               className="h-13 p-3 rounded-4xl border bg-white border-gray-300 text-sm hover:bg-black hover:text-white transition-transform transform hover:-translate-y-0.5 dark:bg-gray-700 dark:text-white dark:border-gray-600"
+               className="h-13 p-3 cursor-pointer rounded-4xl border bg-white border-gray-300 text-sm hover:bg-black hover:text-white transition-transform transform hover:-translate-y-0.5 dark:bg-gray-700 dark:text-white dark:border-gray-600"
             >
                ꔫ
             </button>
