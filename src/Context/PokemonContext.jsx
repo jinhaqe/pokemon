@@ -1,100 +1,54 @@
-import {
-   createContext,
-   useContext,
-   useEffect,
-   useMemo,
-   useReducer,
-} from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { TypeColorContext } from "./TypeColorContext";
 import { LanguageContext } from "./LanguageContext";
-import { debounce } from "lodash";
 
 export const PokemonContext = createContext();
 
-const initialState = {
-   pokemonList: [],
-   filteredPokemonList: [],
-   loading: false,
-   nextUrl: "https://pokeapi.co/api/v2/pokemon?limit=24",
-   more: true,
-   searchQuery: "",
-};
-
-function reducer(state, action) {
-   switch (action.type) {
-      case "SET_POKEMON_LIST":
-         return { ...state, pokemonList: action.payload };
-      case "APPEND_POKEMON_LIST":
-         return {
-            ...state,
-            pokemonList: [...state.pokemonList, ...action.payload],
-         };
-      case "SET_FILTERED_LIST":
-         return { ...state, filteredPokemonList: action.payload };
-      case "SET_LOADING":
-         return { ...state, loading: action.payload };
-      case "SET_NEXT_URL":
-         return { ...state, nextUrl: action.payload };
-      case "SET_MORE":
-         return { ...state, more: action.payload };
-      case "SET_SEARCH_QUERY":
-         return { ...state, searchQuery: action.payload };
-      case "RESET":
-         return initialState;
-      default:
-         return state;
-   }
-}
-
 export function PokemonProvider({ children }) {
    const { language } = useContext(LanguageContext);
+   const [pokemonList, setPokemonList] = useState([]);
+   const [filteredPokemonList, setFilteredPokemonList] = useState([]);
+   const [loading, setLoading] = useState(false);
+   const [nextUrl, setNextUrl] = useState(
+      "https://pokeapi.co/api/v2/pokemon?limit=24"
+   );
+   const [more, setMore] = useState(true);
+
+   // 검색 기능을 위한 상태 추가
+   const [searchQuery, setSearchQuery] = useState("");
+
    const typeKoMap = useContext(TypeColorContext);
 
-   const [state, dispatch] = useReducer(reducer, initialState);
-
-   const {
-      pokemonList,
-      filteredPokemonList,
-      loading,
-      nextUrl,
-      more,
-      searchQuery,
-   } = state;
-
+   // 검색 함수
    const searchPokemon = (query) => {
-      dispatch({ type: "SET_SEARCH_QUERY", payload: query });
-
-      if (loading) return;
+      setSearchQuery(query);
 
       if (!query.trim()) {
-         dispatch({ type: "SET_FILTERED_LIST", payload: pokemonList });
+         // 검색어가 없으면 전체 포켓몬 목록 사용
+         setFilteredPokemonList(pokemonList);
          return;
       }
 
+      // 이름 또는 ID로 검색
       const filtered = pokemonList.filter(
          (pokemon) =>
             pokemon.name.toLowerCase().includes(query.toLowerCase()) ||
             pokemon.id.toString().includes(query)
       );
 
-      dispatch({ type: "SET_FILTERED_LIST", payload: filtered });
+      setFilteredPokemonList(filtered);
    };
-
-   const debouncedSearch = useMemo(
-      () => debounce(searchPokemon, 300),
-      [pokemonList, loading]
-   );
 
    const fetchMorePokemon = async () => {
       if (!nextUrl || loading) return;
 
-      dispatch({ type: "SET_LOADING", payload: true });
+      setLoading(true);
 
       try {
          const response = await fetch(nextUrl);
          const data = await response.json();
-         const results = data.results;
 
+         const results = data.results;
          const detailedData = await Promise.all(
             results.map(async (pokemon) => {
                const detailRes = await fetch(pokemon.url);
@@ -123,9 +77,9 @@ export function PokemonProvider({ children }) {
                   ? "설명 없음"
                   : "No description available";
 
-               const abilities = detailData.abilities.map(
-                  (ability) => ability.ability.name
-               );
+               const abilities = detailData.abilities.map((ability) => {
+                  return ability.ability.name;
+               });
 
                return {
                   id: detailData.id,
@@ -141,8 +95,8 @@ export function PokemonProvider({ children }) {
                   }),
                   height: detailData.height,
                   weight: detailData.weight,
-                  abilities,
-                  description,
+                  abilities: abilities,
+                  description: description,
                   front_shiny:
                      detailData.sprites?.other?.["official-artwork"]
                         ?.front_shiny,
@@ -150,66 +104,66 @@ export function PokemonProvider({ children }) {
             })
          );
 
-         // 중복 제거 후 리스트 추가
-         const newUniquePokemon = detailedData.filter(
-            (newPokemon) => !pokemonList.some((p) => p.id === newPokemon.id)
-         );
+         setPokemonList((prev) => {
+            const newPokemonList = [...prev];
+            detailedData.forEach((newPokemon) => {
+               if (!newPokemonList.some((p) => p.id === newPokemon.id)) {
+                  newPokemonList.push(newPokemon);
+               }
+            });
+            return newPokemonList;
+         });
 
-         dispatch({ type: "APPEND_POKEMON_LIST", payload: newUniquePokemon });
-         dispatch({ type: "SET_NEXT_URL", payload: data.next });
-         dispatch({ type: "SET_MORE", payload: !!data.next });
+         setNextUrl(data.next);
+         setMore(!!data.next);
       } catch (error) {
-         console.error(
+         console.log(
             language === "ko"
                ? "포켓몬 불러오기 실패"
                : "Failed to load Pokemon",
             error
          );
       } finally {
-         dispatch({ type: "SET_LOADING", payload: false });
+         setLoading(false);
       }
    };
 
-   // 포켓몬 리스트가 업데이트되면 필터링 다시 적용
+   // pokemonList가 변경될 때마다 필터링된 목록도 업데이트
    useEffect(() => {
-      if (loading) return;
-
+      // 검색어가 있으면 다시 필터링, 없으면 전체 목록 사용
       if (searchQuery.trim()) {
          searchPokemon(searchQuery);
       } else {
-         dispatch({ type: "SET_FILTERED_LIST", payload: pokemonList });
+         setFilteredPokemonList(pokemonList);
       }
-   }, [pokemonList, loading]);
+   }, [pokemonList]);
 
-   // 언어 바뀌면 초기화
    useEffect(() => {
-      dispatch({ type: "RESET" });
+      setPokemonList([]);
+      setFilteredPokemonList([]); // 필터링된 목록도 초기화
+      setSearchQuery(""); // 검색어도 초기화
+      setNextUrl("https://pokeapi.co/api/v2/pokemon?limit=24"); // Reset URL
+      setMore(true);
    }, [language]);
 
-   // 초기 로딩
    useEffect(() => {
       if (nextUrl && pokemonList.length === 0) {
          fetchMorePokemon();
       }
    }, [nextUrl, language]);
 
-   // 디바운스된 검색 실행
-   useEffect(() => {
-      debouncedSearch(searchQuery);
-   }, [searchQuery]);
-
+   // 컨텍스트 값에 검색 관련 상태와 함수 추가
    return (
       <PokemonContext.Provider
          value={{
-            pokemonList: filteredPokemonList,
-            originalList: pokemonList,
+            pokemonList: filteredPokemonList, // 필터링된 목록 제공
+            originalList: pokemonList, // 원본 목록도 필요할 수 있음
             loading,
             fetchMorePokemon,
             more,
             searchQuery,
-            searchPokemon,
-            setSearchQuery: (query) =>
-               dispatch({ type: "SET_SEARCH_QUERY", payload: query }),
+            searchPokemon, // 검색 함수를 컨텍스트에 포함
+            setSearchQuery, // 검색어 설정 함수도 컨텍스트에 포함
          }}
       >
          {children}

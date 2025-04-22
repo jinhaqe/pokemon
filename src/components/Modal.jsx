@@ -12,10 +12,9 @@ export default function Modal() {
    const [shinyfrontLoaded, setShinyFrontLoaded] = useState(false);
 
    useEffect(() => {
-      if (pokemon) {
-         setFrontLoaded(false);
-         setShinyFrontLoaded(false);
-      }
+      // 포켓몬이 바뀔 때마다 로딩 상태를 초기화
+      setFrontLoaded(false);
+      setShinyFrontLoaded(false);
    }, [pokemon]);
 
    const isAllLoaded = frontLoaded && shinyfrontLoaded;
@@ -65,22 +64,22 @@ export default function Modal() {
          ></div>
          <dialog
             open
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[700px] p-6 rounded-xl bg-white dark:bg-gray-900 shadow-lg z-50"
+            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-11/12 max-w-3xl h-auto max-h-screen overflow-y-auto p-4 md:p-6 rounded-xl bg-white dark:bg-gray-900 shadow-lg z-50"
          >
-            <h2 className="text-xl font-bold mb-4 text-center dark:text-white">
+            <h2 className="text-lg md:text-xl font-bold mb-2 md:mb-4 text-center dark:text-white">
                {pokemon.name} (No.{pokemon.id})
             </h2>
 
-            <div className="flex justify-center items-center h-[250px] bg-gray-100 rounded-xl dark:bg-gray-800">
+            <div className="flex justify-center items-center h-auto min-h-40 md:min-h-64 bg-gray-100 rounded-xl dark:bg-gray-800">
                {!isAllLoaded ? (
-                  <div className="text-gray-600 dark:text-gray-300 text-lg animate-pulse">
+                  <div className="text-gray-600 dark:text-gray-300 text-base md:text-lg animate-pulse">
                      {text.loading}
                   </div>
                ) : (
                   <img
                      src={pokemon.front}
                      alt={text.frontImg}
-                     className="w-50 mx-2 mb-4 p-5"
+                     className="w-32 md:w-40 mx-2 my-4 p-2 md:p-5"
                   />
                )}
 
@@ -89,76 +88,80 @@ export default function Modal() {
                   src={pokemon.front}
                   style={{ display: "none" }}
                   onLoad={() => setFrontLoaded(true)}
+                  alt="hidden loader"
                />
             </div>
 
-            <div className="h-[230px] rounded-xl my-5 dark:bg-gray-900 py-3 px-5">
-               <p className="text-md py-2 mb-5 dark:text-white font-bold">
+            <div className="h-auto rounded-xl my-3 md:my-5 dark:bg-gray-900 py-2 md:py-3 px-3 md:px-5">
+               <p className="text-sm md:text-md py-1 md:py-2 mb-3 md:mb-5 dark:text-white font-bold">
                   " {pokemon.description} "
                </p>
-               <div className="flex gap-30">
-                  <div>
-                     <div className="flex">
-                        <span className="mr-3 dark:text-white">
+               <div className="flex flex-col md:flex-row md:gap-8 lg:gap-30">
+                  <div className="mb-4 md:mb-0">
+                     <div className="flex flex-wrap items-center mb-2">
+                        <span className="mr-2 md:mr-3 dark:text-white">
                            {text.type}
                         </span>
-                        <div className="flex space-x-2 mr-4">
+                        <div className="flex flex-wrap gap-1 md:space-x-2">
                            {typeInfo.map((info, index) => (
                               <span
                                  key={index}
-                                 className={`px-3 py-1 rounded-full text-sm font-medium text-white ${info.color} flex items-center`}
+                                 className={`px-2 md:px-3 py-1 rounded-full text-xs md:text-sm font-medium text-white ${info.color} flex items-center`}
                               >
                                  <img
                                     src={info.icon}
                                     alt={
                                        language === "ko" ? info.ko : info.name
                                     }
-                                    className="w-4 h-4 inline mr-1"
+                                    className="w-3 h-3 md:w-4 md:h-4 inline mr-1"
                                  />
                                  {language === "ko" ? info.ko : info.name}
                               </span>
                            ))}
                         </div>
                      </div>
-                     <p className="my-5 mr-5 dark:text-white">
+                     <p className="my-2 md:my-5 mr-3 md:mr-5 text-sm md:text-base dark:text-white">
                         {text.height} {pokemon.height / 10} {text.meter}
                      </p>
-                     <p className="mb-5 dark:text-white">
+                     <p className="mb-2 md:mb-5 text-sm md:text-base dark:text-white">
                         {text.weight} {pokemon.weight / 10} {text.kg}
                      </p>
-                     <p className="mb-5 dark:text-white">
+                     <p className="mb-2 md:mb-5 text-sm md:text-base dark:text-white">
                         {text.abilities} {pokemon.abilities}
                      </p>
                   </div>
 
-                  <div>
-                     <p className="mb-4 dark:text-white">{text.shiny}</p>
-                     <div className="flex mt-2 items-center">
+                  <div className="mt-3 md:mt-0">
+                     <p className="mb-2 md:mb-4 text-sm md:text-base dark:text-white">
+                        {text.shiny}
+                     </p>
+                     <div className="flex mt-1 md:mt-2 items-center">
                         {!isAllLoaded ? (
-                           <div className="text-gray-600 dark:text-gray-300 text-lg animate-pulse">
+                           <div className="text-gray-600 dark:text-gray-300 text-sm md:text-lg animate-pulse">
                               {text.loadingShort}
                            </div>
                         ) : (
                            <img
                               src={pokemon.front_shiny}
                               alt={text.frontImg}
-                              className="w-30 mr-2 bg-gray-100 rounded-xl dark:bg-gray-800"
+                              className="w-24 md:w-30 mr-2 bg-gray-100 rounded-xl dark:bg-gray-800"
                            />
                         )}
                         <img
                            src={pokemon.front_shiny}
                            style={{ display: "none" }}
                            onLoad={() => setShinyFrontLoaded(true)}
+                           alt="hidden shiny loader"
                         />
                      </div>
                   </div>
                </div>
             </div>
 
-            <div className="text-center mt-7">
+            <div className="text-center mt-3 md:mt-7">
                <button
                   onClick={closeModal}
-                  className="mt-10 px-6 py-2 bg-gray-100 text-black rounded hover:bg-gray-200 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
+                  className="mt-2 md:mt-10 px-4 md:px-6 py-1 md:py-2 bg-gray-100 text-black text-sm md:text-base rounded hover:bg-gray-200 dark:bg-gray-800 dark:text-white dark:hover:bg-gray-700"
                >
                   {text.close}
                </button>
