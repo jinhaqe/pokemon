@@ -1,6 +1,6 @@
 import { useEffect, useRef, useContext, useState } from "react";
 import PokemonCard from "./PorkemonCard";
-import Bg from "../assets/Bg.jpg";
+import Bg from "../assets/bg.jpg";
 import Bg2 from "../assets/Bg2.jpg";
 import { useTheme } from "../Context/ThemeContext";
 import { useModal } from "../Context/ModalContext";
