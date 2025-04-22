@@ -18,7 +18,7 @@ export default function Modal() {
       }
    }, [pokemon]);
 
-   const isAllLoaded = frontLoaded || shinyfrontLoaded;
+   const isAllLoaded = frontLoaded && shinyfrontLoaded;
 
    if (!pokemon) return null;
 
