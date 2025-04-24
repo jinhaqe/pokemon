@@ -114,8 +114,8 @@ export default function Login() {
                </button>
             </form>
 
-            <div className="text-center text-sm text-gray-600 mt-4">
-               <span>{texts.noAccount}</span>
+            <div className="text-center text-sm text-gray-600 mt-4 dark:text-white">
+               <span>{texts.noAccount} </span>
                <Link
                   to="/signup"
                   className="font-semibold text-sky-500 hover:text-sky-600"
