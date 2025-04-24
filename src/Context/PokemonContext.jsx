@@ -91,7 +91,7 @@ export function PokemonProvider({ children }) {
       try {
          // 포켓몬 전체 목록을 가져옴 (1000개 정도면 충분)
          const response = await fetch(
-            "https://pokeapi.co/api/v2/pokemon?limit=2000"
+            "https://pokeapi.co/api/v2/pokemon?limit=1200"
          );
          const data = await response.json();
          const results = data.results;
