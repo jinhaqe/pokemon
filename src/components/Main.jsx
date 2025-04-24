@@ -7,18 +7,46 @@ import { useModal } from "../Context/ModalContext";
 import { useLanguage } from "../Context/LanguageContext";
 import { PokemonContext } from "../Context/PokemonContext";
 import noResult from "../assets/로딩.gif";
+import loadingGif from "../assets/에몽가.gif";
+import LanguageGif from "../assets/헤롱헤롱.gif";
 
 export default function Main() {
-   const { pokemonList, searchLoading, fetchMorePokemon, more } =
-      useContext(PokemonContext);
+   const {
+      pokemonList,
+      loading,
+      searchLoading,
+      fetchMorePokemon,
+      more,
+      originalList,
+      dataFullyLoaded,
+   } = useContext(PokemonContext);
    const { searchPokemon, searchQuery } = useContext(PokemonContext);
    const { language } = useLanguage();
    const { openModal } = useModal();
    const { isDark } = useTheme();
 
    const [query, setQuery] = useState(searchQuery);
+   const [hasSearched, setHasSearched] = useState(false); // 검색이 실행되었는지 추적
+   const [prevLanguage, setPrevLanguage] = useState(language); // 이전 언어 상태 저장
+   const [isLanguageChanging, setIsLanguageChanging] = useState(false); // 언어 변경 중 상태
 
    const observerRef = useRef();
+
+   // 언어 변경 감지
+   useEffect(() => {
+      if (prevLanguage !== language) {
+         setIsLanguageChanging(true); // 언어 변경 중 상태 활성화
+         setPrevLanguage(language);
+      }
+   }, [language]);
+
+   // 데이터 로딩 상태 감지
+   useEffect(() => {
+      // 언어 변경 중이었고, 로딩이 완료되면 언어 변경 중 상태 해제
+      if (isLanguageChanging && !loading && dataFullyLoaded) {
+         setIsLanguageChanging(false);
+      }
+   }, [loading, isLanguageChanging, dataFullyLoaded]);
 
    useEffect(() => {
       const observer = new IntersectionObserver(
@@ -39,12 +67,81 @@ export default function Main() {
 
    const handleSearch = () => {
       searchPokemon(query);
+      setHasSearched(true); // 검색 실행 표시
    };
 
    const handleKeyPress = (e) => {
       if (e.key === "Enter") {
          handleSearch();
       }
+   };
+
+   // 로딩 상태 및 결과 렌더링 로직
+   const renderContent = () => {
+      // 언어 변경 중 상태
+      if (isLanguageChanging) {
+         return (
+            <div className="flex-col items-center text-center mt-10">
+               <p className="text-xl mb-4 text-gray-500">
+                  {language === "ko"
+                     ? "언어 변환 중..."
+                     : "Changing language..."}
+               </p>
+               <img
+                  src={LanguageGif}
+                  alt="language changing"
+                  className="mx-auto"
+               />
+            </div>
+         );
+      }
+
+      // 초기 로딩 상태
+      if (loading && !hasSearched && originalList.length === 0) {
+         return (
+            <div className="flex-col items-center text-center mt-20">
+               <p className="text-xl mb-4 text-gray-500">
+                  {language === "ko"
+                     ? "포켓몬 불러오는 중..."
+                     : "Loading Pokémon..."}
+               </p>
+               <img src={loadingGif} alt="loading" className="mx-auto" />
+            </div>
+         );
+      }
+
+      // 검색 로딩 상태
+      if (searchLoading) {
+         return (
+            <div className="flex-col items-center text-center">
+               <p className="text-xl mb-4 text-gray-500">
+                  {language === "ko" ? "검색 중..." : "Searching..."}
+               </p>
+               <img src={loadingGif} alt="searching" className="mx-auto" />
+            </div>
+         );
+      }
+
+      // 검색 결과가 없음
+      if (hasSearched && pokemonList.length === 0 && dataFullyLoaded) {
+         return (
+            <div className="flex-col items-center text-center">
+               <p className="text-xl mb-4 text-gray-500">
+                  {language === "ko" ? "결과가 없습니다" : "No results found"}
+               </p>
+               <img src={noResult} alt="no results" className="mx-auto" />
+            </div>
+         );
+      }
+
+      // 검색 결과 표시
+      return pokemonList.map((pokemon) => (
+         <PokemonCard
+            key={pokemon.id}
+            pokemon={pokemon}
+            onClick={() => openModal(pokemon)}
+         />
+      ));
    };
 
    return (
@@ -75,29 +172,14 @@ export default function Main() {
 
          {/* 포켓몬 카드 리스트 */}
          <div className="w-[75%] mx-auto flex flex-wrap justify-center gap-5 py-5">
-            {pokemonList.length === 0 && !searchLoading ? ( // searchLoading이 false일 때만 결과 없음 표시
-               <div className="flex-col">
-                  <p className="text-xl text-center mb-4 text-gray-500">
-                     {language === "ko"
-                        ? "결과가 없습니다"
-                        : "No results found"}
-                  </p>
-                  <img src={noResult} />
-               </div>
-            ) : (
-               pokemonList.map((pokemon) => (
-                  <PokemonCard
-                     key={pokemon.id}
-                     pokemon={pokemon}
-                     onClick={() => openModal(pokemon)}
-                  />
-               ))
-            )}
+            {renderContent()}
          </div>
 
-         <div className="w-full flex justify-center">
-            <div ref={observerRef} className="h-10 w-full"></div>
-         </div>
+         {more && (
+            <div className="w-full flex justify-center">
+               <div ref={observerRef} className="h-10 w-full"></div>
+            </div>
+         )}
       </main>
    );
 }
