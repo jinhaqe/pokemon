@@ -161,7 +161,7 @@ export default function Main() {
                      ? "포켓몬 이름 또는 번호 검색..."
                      : "Search by name or number..."
                }
-               className="w-full mr-3 max-w-lg px-5 py-3 mb-10 rounded-4xl border bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:focus:ring-gray-400"
+               className="w-[400px] sm:w-full mr-3 max-w-lg px-5 py-3 mb-10 rounded-4xl border bg-white border-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-700 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:focus:ring-gray-400"
             />
             <button
                onClick={handleSearch} // 버튼 클릭 시 검색
