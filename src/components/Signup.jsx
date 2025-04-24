@@ -3,18 +3,14 @@ import { useNavigate } from "react-router";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase_config";
 import { Link } from "react-router";
-import lastB from "../assets/lastB.png";
 import FormHeader from "./FormHeader";
 import { useLanguage } from "../Context/LanguageContext";
-import { useTheme } from "../Context/ThemeContext";
-import lastBg2 from "../assets/lastBg2.png";
 
 export default function Signup() {
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
    const [confirmPassword, setConfirmPassword] = useState("");
    const [loading, setLoading] = useState(false);
-   const { isDark } = useTheme();
    const navigate = useNavigate();
    const { language } = useLanguage();
 
@@ -76,15 +72,10 @@ export default function Signup() {
    };
 
    return (
-      <div
-         className="flex justify-center items-center h-screen bg-cover bg-center"
-         style={{
-            backgroundImage: `url(${isDark ? lastBg2 : lastB})`,
-         }}
-      >
+      <div className="flex justify-center items-center h-screen bg-cover bg-center dark:bg-gray-900">
          <div
             className="w-full max-w-md p-8 bg-white bg-opacity-80 rounded-lg shadow-lg space-y-6
-                dark:bg-gray-800/90 transition-colors duration-300"
+                dark:bg-gray-800 transition-colors duration-300"
          >
             <FormHeader />
 

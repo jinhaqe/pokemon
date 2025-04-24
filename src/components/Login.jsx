@@ -2,17 +2,13 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase_config";
-import lastB from "../assets/lastB.png";
 import FormHeader from "./FormHeader";
 import { useLanguage } from "../Context/LanguageContext";
-import { useTheme } from "../Context/ThemeContext";
-import lastBg2 from "../assets/lastBg2.png";
 
 export default function Login() {
    const [email, setEmail] = useState("");
    const [password, setPassword] = useState("");
    const [loading, setLoading] = useState(false);
-   const { isDark } = useTheme();
    const navigate = useNavigate();
    const { language } = useLanguage();
 
@@ -60,20 +56,12 @@ export default function Login() {
    };
 
    return (
-      <div
-         className="flex justify-center items-center h-screen bg-cover bg-center bg-no-repeat"
-         style={{
-            backgroundImage: `url(${isDark ? lastBg2 : lastB})`,
-         }}
-      >
-         <div
-            className="w-full max-w-md p-8 rounded-2xl shadow-lg space-y-6 
-                   bg-white bg-opacity-70 dark:bg-gray-800/90 transition-colors duration-300"
-         >
+      <div className="flex justify-center items-center h-screen bg-cover bg-center bg-no-repeat dark:bg-gray-900">
+         <div className="w-full max-w-md p-8 bg-white bg-opacity-70 rounded-2xl shadow-lg space-y-6 dark:bg-gray-700">
             <FormHeader />
 
             <div className="text-center mb-6">
-               <h2 className="text-4xl font-semibold text-sky-500 dark:text-sky-300 font-pokemon">
+               <h2 className="text-4xl font-semibold text-sky-500 font-pokemon dark:text-white">
                   {texts.login}
                </h2>
             </div>
@@ -82,7 +70,7 @@ export default function Login() {
                <div>
                   <label
                      htmlFor="email"
-                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                     className="block text-sm font-medium text-gray-700 dark:text-white"
                   >
                      {texts.emailLabel}
                   </label>
@@ -91,17 +79,14 @@ export default function Login() {
                      placeholder={texts.emailPlaceholder}
                      value={email}
                      onChange={(e) => setEmail(e.target.value)}
-                     className="w-full p-4 mt-2 border border-sky-500 rounded-xl 
-                          focus:outline-none focus:ring-2 focus:ring-sky-300 
-                          bg-white dark:bg-gray-700 text-gray-800 dark:text-white 
-                          placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
+                     className="w-full p-4 mt-2 border border-sky-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 transition duration-300 ease-in-out dark:bg-gray-900 dark:text-white"
                   />
                </div>
 
                <div>
                   <label
                      htmlFor="password"
-                     className="block text-sm font-medium text-gray-700 dark:text-gray-300"
+                     className="block text-sm font-medium text-gray-700 dark:text-white"
                   >
                      {texts.pwLabel}
                   </label>
@@ -110,18 +95,13 @@ export default function Login() {
                      placeholder={texts.pwPlaceholder}
                      value={password}
                      onChange={(e) => setPassword(e.target.value)}
-                     className="w-full p-4 mt-2 border border-sky-500 rounded-xl 
-                          focus:outline-none focus:ring-2 focus:ring-sky-300 
-                          bg-white dark:bg-gray-700 text-gray-800 dark:text-white 
-                          placeholder-gray-400 dark:placeholder-gray-500 transition-colors"
+                     className="w-full p-4 mt-2 border border-sky-500 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 transition duration-300 ease-in-out dark:bg-gray-900 dark:text-white"
                   />
                </div>
 
                <button
                   type="submit"
-                  className="w-full p-4 mt-6 bg-sky-500 text-white font-semibold 
-                       rounded-xl hover:bg-sky-600 transition-all ease-in-out 
-                       disabled:opacity-50"
+                  className="w-full p-4 mt-6 bg-sky-500 text-white font-semibold rounded-xl hover:bg-sky-600 transition-all ease-in-out"
                   disabled={loading}
                >
                   {loading ? (
@@ -134,8 +114,8 @@ export default function Login() {
                </button>
             </form>
 
-            <div className="text-center text-sm text-gray-600 dark:text-gray-400 mt-4">
-               <span>{texts.noAccount}</span>{" "}
+            <div className="text-center text-sm text-gray-600 mt-4">
+               <span>{texts.noAccount}</span>
                <Link
                   to="/signup"
                   className="font-semibold text-sky-500 hover:text-sky-600"
