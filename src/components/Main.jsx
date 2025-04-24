@@ -9,6 +9,7 @@ import { PokemonContext } from "../Context/PokemonContext";
 import noResult from "../assets/로딩.gif";
 import loadingGif from "../assets/에몽가.gif";
 import LanguageGif from "../assets/헤롱헤롱.gif";
+import Top from "./Top";
 
 export default function Main() {
    const {
@@ -180,6 +181,7 @@ export default function Main() {
                <div ref={observerRef} className="h-10 w-full"></div>
             </div>
          )}
+         <Top />
       </main>
    );
 }

@@ -1,8 +1,10 @@
 import { useContext } from "react";
 import { TypeColorContext } from "../Context/TypeColorContext";
+import { LanguageContext } from "../Context/LanguageContext";
 
 export default function PokemonCard({ pokemon, onClick }) {
    const typeKoMap = useContext(TypeColorContext); // 타입 색상 매핑
+   const { language } = useContext(LanguageContext);
 
    // 포켓몬 타입을 안전하게 가져오기
    const getTypeInfo = (type) => {
@@ -43,10 +45,10 @@ export default function PokemonCard({ pokemon, onClick }) {
                      >
                         <img
                            src={typeInfo.icon}
-                           alt={typeInfo.ko}
+                           alt={language === "ko" ? typeInfo.ko : typeInfo.name}
                            className="w-4 h-4 inline mr-1"
                         />
-                        {typeInfo.ko}
+                        {language === "ko" ? typeInfo.ko : typeInfo.name}
                      </span>
                   </div>
                );
