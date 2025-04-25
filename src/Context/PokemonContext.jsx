@@ -15,46 +15,11 @@ export function PokemonProvider({ children }) {
    const [currentPage, setCurrentPage] = useState(1);
    const [more, setMore] = useState(true);
    const ITEMS_PER_PAGE = 24;
-   const BATCH_SIZE = 20;
-   const INITIAL_LIMIT = 300; // 최대 300개만 가져오도록 제한
 
    // 검색 기능을 위한 상태 추가
    const [searchQuery, setSearchQuery] = useState("");
 
    const typeKoMap = useContext(TypeColorContext);
-
-   // 캐시 관련 함수
-   const getCacheKey = () => `pokemon_data_${language}`;
-
-   const loadFromCache = () => {
-      try {
-         const cached = localStorage.getItem(getCacheKey());
-         if (cached) {
-            const { data, timestamp } = JSON.parse(cached);
-            // 1일 이내의 캐시만 사용
-            if (Date.now() - timestamp < 24 * 60 * 60 * 1000) {
-               console.log("캐시에서 데이터 로드");
-               return data;
-            }
-         }
-      } catch (error) {
-         console.error("캐시 로드 실패:", error);
-      }
-      return null;
-   };
-
-   const saveToCache = (data) => {
-      try {
-         const cacheItem = {
-            data,
-            timestamp: Date.now(),
-         };
-         localStorage.setItem(getCacheKey(), JSON.stringify(cacheItem));
-         console.log("데이터 캐시에 저장됨");
-      } catch (error) {
-         console.error("캐시 저장 실패:", error);
-      }
-   };
 
    // 검색 함수
    const searchPokemon = (query) => {
@@ -118,168 +83,101 @@ export function PokemonProvider({ children }) {
       }
    };
 
-   // 단일 포켓몬 상세 정보를 가져오는 함수
-   const fetchPokemonDetails = async (pokemon) => {
-      try {
-         const detailRes = await fetch(pokemon.url);
-         if (!detailRes.ok) {
-            throw new Error(`HTTP error! status: ${detailRes.status}`);
-         }
-         const detailData = await detailRes.json();
-
-         const speciesRes = await fetch(detailData.species.url);
-         if (!speciesRes.ok) {
-            throw new Error(`HTTP error! status: ${speciesRes.status}`);
-         }
-         const speciesData = await speciesRes.json();
-
-         const localizedName = speciesData.names.find(
-            (name) => name.language.name === language
-         );
-
-         const displayImage =
-            detailData.sprites.versions["generation-v"]["black-white"]?.animated
-               ?.front_default ||
-            detailData.sprites?.other?.showdown?.front_default ||
-            detailData.sprites.front_default;
-
-         const explanation = speciesData.flavor_text_entries.find(
-            (entry) => entry.language.name === language
-         );
-
-         const description = explanation
-            ? explanation.flavor_text
-            : language === "ko"
-            ? "설명 없음"
-            : "No description available";
-
-         const abilities = detailData.abilities.map((ability) => {
-            return ability.ability.name;
-         });
-
-         return {
-            id: detailData.id,
-            name: localizedName ? localizedName.name : detailData.name,
-            gif: displayImage,
-            front: detailData.sprites?.other?.["official-artwork"]
-               ?.front_default,
-            types: detailData.types.map((e) => {
-               const type = typeKoMap[e.type.name];
-               return type || { name: e.type.name, color: "bg-yellow-600" };
-            }),
-            height: detailData.height,
-            weight: detailData.weight,
-            abilities: abilities,
-            description: description,
-            front_shiny:
-               detailData.sprites?.other?.["official-artwork"]?.front_shiny,
-         };
-      } catch (error) {
-         console.error(`Error fetching details for ${pokemon.name}:`, error);
-         return null; // 오류 발생 시 null 반환
-      }
-   };
-
-   // 배치 처리 함수
-   const fetchInBatches = async (pokemonList) => {
-      const allResults = [];
-
-      for (let i = 0; i < pokemonList.length; i += BATCH_SIZE) {
-         const batch = pokemonList.slice(i, i + BATCH_SIZE);
-         console.log(
-            `배치 처리 중: ${i + 1}-${i + batch.length}/${pokemonList.length}`
-         );
-
-         try {
-            const batchResults = await Promise.all(
-               batch.map((pokemon) => fetchPokemonDetails(pokemon))
-            );
-
-            const validResults = batchResults.filter(
-               (result) => result !== null
-            );
-            allResults.push(...validResults);
-
-            // 중간 결과 업데이트
-            const sortedResults = [...allResults].sort((a, b) => a.id - b.id);
-            setAllPokemonData(sortedResults);
-            setFilteredPokemonList(sortedResults);
-
-            // 첫 페이지 아이템 업데이트
-            const firstPageItems = sortedResults.slice(0, ITEMS_PER_PAGE);
-            setPokemonList(firstPageItems);
-            setMore(sortedResults.length > ITEMS_PER_PAGE);
-
-            // 배치 사이에 잠시 지연
-            if (i + BATCH_SIZE < pokemonList.length) {
-               await new Promise((resolve) => setTimeout(resolve, 10));
-            }
-         } catch (error) {
-            console.error(`배치 처리 오류 (${i}-${i + BATCH_SIZE}):`, error);
-         }
-      }
-
-      return allResults;
-   };
-
-   // 모든 포켓몬 데이터를 가져오는 함수
+   // 모든 포켓몬 데이터를 한 번에 가져오는 함수
    const fetchAllPokemon = async () => {
       if (loading) return;
 
       setLoading(true);
-
       try {
-         // 먼저 캐시에서 확인
-         const cachedData = loadFromCache();
-         if (cachedData && cachedData.length > 0) {
-            setAllPokemonData(cachedData);
-            setFilteredPokemonList(cachedData);
-
-            const firstPageItems = cachedData.slice(0, ITEMS_PER_PAGE);
-            setPokemonList(firstPageItems);
-
-            setCurrentPage(1);
-            setMore(cachedData.length > ITEMS_PER_PAGE);
-            setDataFullyLoaded(true);
-            setLoading(false);
-            return;
-         }
-
-         // 캐시 없으면 API 호출
+         // 포켓몬 전체 목록을 가져옴
          const response = await fetch(
-            `https://pokeapi.co/api/v2/pokemon?limit=${INITIAL_LIMIT}`
+            "https://pokeapi.co/api/v2/pokemon?limit=1500"
          );
-
-         if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-         }
-
          const data = await response.json();
          const results = data.results;
 
-         console.log(`총 ${results.length}개의 포켓몬 데이터를 가져옵니다.`);
+         // 각 포켓몬의 상세 정보를 가져옴
+         const detailedData = await Promise.all(
+            results.map(async (pokemon) => {
+               try {
+                  const detailRes = await fetch(pokemon.url);
+                  const detailData = await detailRes.json();
 
-         // 포켓몬 데이터를 배치로 처리
-         const processedData = await fetchInBatches(results);
+                  const speciesRes = await fetch(detailData.species.url);
+                  const speciesData = await speciesRes.json();
 
-         // 최종 정렬된 데이터
-         const sortedData = processedData.sort((a, b) => a.id - b.id);
+                  const localizedName = speciesData.names.find(
+                     (name) => name.language.name === language
+                  );
 
-         // 캐시에 저장
-         saveToCache(sortedData);
+                  const displayImage =
+                     detailData.sprites.versions["generation-v"]["black-white"]
+                        ?.animated?.front_default ||
+                     detailData.sprites?.other?.showdown?.front_default ||
+                     detailData.sprites.front_default;
 
-         // 상태 업데이트
-         setAllPokemonData(sortedData);
-         setFilteredPokemonList(sortedData);
+                  const explanation = speciesData.flavor_text_entries.find(
+                     (entry) => entry.language.name === language
+                  );
 
-         const firstPageItems = sortedData.slice(0, ITEMS_PER_PAGE);
+                  const description = explanation
+                     ? explanation.flavor_text
+                     : language === "ko"
+                     ? "설명 없음"
+                     : "No description available";
+
+                  const abilities = detailData.abilities.map((ability) => {
+                     return ability.ability.name;
+                  });
+
+                  return {
+                     id: detailData.id,
+                     name: localizedName ? localizedName.name : detailData.name,
+                     gif: displayImage,
+                     front: detailData.sprites?.other?.["official-artwork"]
+                        ?.front_default,
+                     types: detailData.types.map((e) => {
+                        const type = typeKoMap[e.type.name];
+                        return (
+                           type || { name: e.type.name, color: "bg-yellow-600" }
+                        );
+                     }),
+                     height: detailData.height,
+                     weight: detailData.weight,
+                     abilities: abilities,
+                     description: description,
+                     front_shiny:
+                        detailData.sprites?.other?.["official-artwork"]
+                           ?.front_shiny,
+                  };
+               } catch (error) {
+                  console.error(
+                     `Error fetching details for ${pokemon.name}:`,
+                     error
+                  );
+                  return null; // 오류 발생 시 null 반환
+               }
+            })
+         );
+
+         // null 값 필터링
+         const validPokemonData = detailedData.filter(
+            (pokemon) => pokemon !== null
+         );
+
+         // 모든 포켓몬 데이터 저장
+         setAllPokemonData(validPokemonData);
+         setFilteredPokemonList(validPokemonData);
+
+         // 첫 페이지 항목만 표시 목록에 추가
+         const firstPageItems = validPokemonData.slice(0, ITEMS_PER_PAGE);
          setPokemonList(firstPageItems);
 
          setCurrentPage(1);
-         setMore(sortedData.length > ITEMS_PER_PAGE);
+         setMore(validPokemonData.length > ITEMS_PER_PAGE);
          setDataFullyLoaded(true);
       } catch (error) {
-         console.error(
+         console.log(
             language === "ko"
                ? "포켓몬 불러오기 실패"
                : "Failed to load Pokemon",
