@@ -6,44 +6,37 @@ export const PokemonContext = createContext();
 
 export function PokemonProvider({ children }) {
    const { language } = useContext(LanguageContext);
-   const [allPokemonData, setAllPokemonData] = useState([]); // 모든 포켓몬 데이터
-   const [pokemonList, setPokemonList] = useState([]); // 화면에 표시할 포켓몬 목록
-   const [filteredPokemonList, setFilteredPokemonList] = useState([]); // 검색 결과 포켓몬 목록
+   const [allPokemonData, setAllPokemonData] = useState([]);
+   const [pokemonList, setPokemonList] = useState([]);
+   const [filteredPokemonList, setFilteredPokemonList] = useState([]);
    const [loading, setLoading] = useState(false);
    const [searchLoading, setSearchLoading] = useState(false);
    const [dataFullyLoaded, setDataFullyLoaded] = useState(false);
    const [currentPage, setCurrentPage] = useState(1);
    const [more, setMore] = useState(true);
-   const ITEMS_PER_PAGE = 24;
-
-   // 검색 기능을 위한 상태 추가
    const [searchQuery, setSearchQuery] = useState("");
+   const ITEMS_PER_PAGE = 24;
 
    const typeKoMap = useContext(TypeColorContext);
 
-   // 검색 함수
    const searchPokemon = (query) => {
       setSearchQuery(query);
       setSearchLoading(true);
-      setCurrentPage(1); // 검색 시 첫 페이지로 리셋
+      setCurrentPage(1);
 
       try {
          if (!query.trim()) {
-            // 검색어가 없으면 전체 목록의 첫 페이지
             const firstPageItems = allPokemonData.slice(0, ITEMS_PER_PAGE);
             setFilteredPokemonList(allPokemonData);
             setPokemonList(firstPageItems);
             setMore(allPokemonData.length > ITEMS_PER_PAGE);
          } else {
-            // 검색어로 필터링
             const filtered = allPokemonData.filter(
                (pokemon) =>
                   pokemon.name.toLowerCase().includes(query.toLowerCase()) ||
                   pokemon.id.toString().includes(query)
             );
             setFilteredPokemonList(filtered);
-
-            // 필터링된 결과의 첫 페이지만 표시
             const firstPageItems = filtered.slice(0, ITEMS_PER_PAGE);
             setPokemonList(firstPageItems);
             setMore(filtered.length > ITEMS_PER_PAGE);
@@ -55,18 +48,14 @@ export function PokemonProvider({ children }) {
       }
    };
 
-   // 무한 스크롤을 위한 함수
    const fetchMorePokemon = () => {
       if (!more || loading) return;
-
       setLoading(true);
 
       try {
          const nextPage = currentPage + 1;
          const startIndex = currentPage * ITEMS_PER_PAGE;
          const endIndex = startIndex + ITEMS_PER_PAGE;
-
-         // 현재 필터링된 목록에서 다음 페이지 항목 가져오기
          const nextPageItems = filteredPokemonList.slice(startIndex, endIndex);
 
          if (nextPageItems.length > 0) {
@@ -83,22 +72,13 @@ export function PokemonProvider({ children }) {
       }
    };
 
-   // 모든 포켓몬 데이터를 한 번에 가져오는 함수
-   const fetchAllPokemon = async () => {
-      if (loading) return;
+   const fetchPokemonInBatches = async (results, batchSize = 50) => {
+      const allData = [];
 
-      setLoading(true);
-      try {
-         // 포켓몬 전체 목록을 가져옴
-         const response = await fetch(
-            "https://pokeapi.co/api/v2/pokemon?limit=1500"
-         );
-         const data = await response.json();
-         const results = data.results;
-
-         // 각 포켓몬의 상세 정보를 가져옴
-         const detailedData = await Promise.all(
-            results.map(async (pokemon) => {
+      for (let i = 0; i < results.length; i += batchSize) {
+         const batch = results.slice(i, i + batchSize);
+         const detailedBatch = await Promise.all(
+            batch.map(async (pokemon) => {
                try {
                   const detailRes = await fetch(pokemon.url);
                   const detailData = await detailRes.json();
@@ -126,9 +106,9 @@ export function PokemonProvider({ children }) {
                      ? "설명 없음"
                      : "No description available";
 
-                  const abilities = detailData.abilities.map((ability) => {
-                     return ability.ability.name;
-                  });
+                  const abilities = detailData.abilities.map(
+                     (ability) => ability.ability.name
+                  );
 
                   return {
                      id: detailData.id,
@@ -139,7 +119,10 @@ export function PokemonProvider({ children }) {
                      types: detailData.types.map((e) => {
                         const type = typeKoMap[e.type.name];
                         return (
-                           type || { name: e.type.name, color: "bg-yellow-600" }
+                           type || {
+                              name: e.type.name,
+                              color: "bg-yellow-600",
+                           }
                         );
                      }),
                      height: detailData.height,
@@ -151,28 +134,34 @@ export function PokemonProvider({ children }) {
                            ?.front_shiny,
                   };
                } catch (error) {
-                  console.error(
-                     `Error fetching details for ${pokemon.name}:`,
-                     error
-                  );
-                  return null; // 오류 발생 시 null 반환
+                  console.error(`Error fetching ${pokemon.name}`, error);
+                  return null;
                }
             })
          );
 
-         // null 값 필터링
-         const validPokemonData = detailedData.filter(
-            (pokemon) => pokemon !== null
-         );
+         allData.push(...detailedBatch.filter((p) => p !== null));
+      }
 
-         // 모든 포켓몬 데이터 저장
+      return allData;
+   };
+
+   const fetchAllPokemon = async () => {
+      if (loading) return;
+
+      setLoading(true);
+      try {
+         const response = await fetch(
+            "https://pokeapi.co/api/v2/pokemon?limit=1250"
+         );
+         const data = await response.json();
+         const results = data.results;
+
+         const validPokemonData = await fetchPokemonInBatches(results);
+
          setAllPokemonData(validPokemonData);
          setFilteredPokemonList(validPokemonData);
-
-         // 첫 페이지 항목만 표시 목록에 추가
-         const firstPageItems = validPokemonData.slice(0, ITEMS_PER_PAGE);
-         setPokemonList(firstPageItems);
-
+         setPokemonList(validPokemonData.slice(0, ITEMS_PER_PAGE));
          setCurrentPage(1);
          setMore(validPokemonData.length > ITEMS_PER_PAGE);
          setDataFullyLoaded(true);
@@ -188,7 +177,6 @@ export function PokemonProvider({ children }) {
       }
    };
 
-   // 언어가 변경되면 모든 상태 초기화하고 데이터 다시 불러오기
    useEffect(() => {
       setAllPokemonData([]);
       setPokemonList([]);
@@ -197,20 +185,18 @@ export function PokemonProvider({ children }) {
       setCurrentPage(1);
       setMore(true);
       setDataFullyLoaded(false);
-      // 언어 변경 시 데이터 다시 로드
       fetchAllPokemon();
    }, [language]);
 
-   // 컨텍스트 제공 값
    return (
       <PokemonContext.Provider
          value={{
-            pokemonList, // 화면에 표시할 목록
-            originalList: allPokemonData, // 전체 데이터 (필터링 전)
+            pokemonList,
+            originalList: allPokemonData,
             loading,
             searchLoading,
-            fetchMorePokemon, // 무한 스크롤을 위한 함수
-            more, // 더 로드할 항목이 있는지 여부
+            fetchMorePokemon,
+            more,
             searchQuery,
             searchPokemon,
             setSearchQuery,
