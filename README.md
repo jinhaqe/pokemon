@@ -1,6 +1,15 @@
-# React + Vite
+# 포켓몬 도감
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+현재 공개되어있는 포켓몬 API를 사용해 포켓몬 도감을 제작하였습니다.
+
+1. 개발 환경
+   - React + Vite
+   - Tailwind CSS
+  
+2. 현재 디렉토리
+   ```
+   
+   ```
 
 Currently, two official plugins are available:
 
