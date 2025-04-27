@@ -31,7 +31,7 @@
       │   └── TypeColorContext.js     # 타입별 이름(한/영)과 컬러 정보 제공
       │
       ├── App.js                  # 최상위 컴포넌트
-      └── index.js               # 앱 진입점
+      └── index.js                # 앱 진입점
    ```
 
    <br>
